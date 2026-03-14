@@ -380,9 +380,9 @@ export const getGeoProfile = async (ip: string | null) => {
 };
 
 export const getUsdFxRate = async (targetCurrency: string): Promise<number> => {
+  if (!targetCurrency || targetCurrency === "USD") return 1;
   const env = getServerEnv();
   const apiKey = requireValue(env.exchangerateApiKey, "EXCHANGERATE_API_KEY");
-  if (!targetCurrency || targetCurrency === "USD") return 1;
 
   const normalized = targetCurrency.toUpperCase();
   const cacheKey = `fx:USD:${normalized}`;
