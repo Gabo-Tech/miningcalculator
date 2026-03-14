@@ -1,4 +1,6 @@
-import { chromium } from "playwright";
+type ChromiumApi = {
+  launch: (options: { headless: boolean }) => Promise<any>;
+};
 
 type SearchResult = {
   title: string;
@@ -86,6 +88,15 @@ const sanitizeForMatch = (value: string): string =>
     .replace(/\s+/g, " ")
     .trim();
 
+const loadChromium = async (): Promise<ChromiumApi | null> => {
+  try {
+    const playwright = (await import("playwright")) as unknown as { chromium?: ChromiumApi };
+    return playwright.chromium || null;
+  } catch {
+    return null;
+  }
+};
+
 export const minerNameMatchesOffer = (minerName: string, offerTitle: string): boolean => {
   const minerTokens = sanitizeForMatch(minerName)
     .split(" ")
@@ -114,7 +125,10 @@ export const crawlOffersFromSearchResults = async (
 
   if (!trusted.length) return [];
 
-  let browser: Awaited<ReturnType<typeof chromium.launch>> | null = null;
+  const chromium = await loadChromium();
+  if (!chromium) return [];
+
+  let browser: Awaited<ReturnType<ChromiumApi["launch"]>> | null = null;
   try {
     browser = await chromium.launch({ headless: true });
     const offers: CrawledOffer[] = [];
@@ -147,6 +161,15 @@ export const getCrawlerHealth = async (): Promise<{
   status: "ok" | "error";
   detail: string;
 }> => {
+  const chromium = await loadChromium();
+  if (!chromium) {
+    return {
+      provider: "crawler",
+      status: "error",
+      detail: "Playwright unavailable: package not available in current runtime",
+    };
+  }
+
   try {
     await chromium.launch({ headless: true }).then((browser) => browser.close());
     return { provider: "crawler", status: "ok", detail: "Playwright Chromium available" };
