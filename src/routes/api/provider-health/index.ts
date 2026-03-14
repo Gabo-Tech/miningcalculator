@@ -21,6 +21,7 @@ export const onGet: RequestHandler = async ({ json, request }) => {
       providers: providers.map((provider) => ({
         provider: provider.provider,
         status: provider.status,
+        detail: provider.detail,
       })),
       overall: hasError ? "degraded" : hasMissing ? "partial" : "healthy",
       checkedAt: Date.now(),
