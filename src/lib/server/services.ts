@@ -382,7 +382,8 @@ export const getGeoProfile = async (ip: string | null) => {
 export const getUsdFxRate = async (targetCurrency: string): Promise<number> => {
   if (!targetCurrency || targetCurrency === "USD") return 1;
   const env = getServerEnv();
-  const apiKey = requireValue(env.exchangerateApiKey, "EXCHANGERATE_API_KEY");
+  const apiKey = env.exchangerateApiKey;
+  if (!apiKey) return 1;
 
   const normalized = targetCurrency.toUpperCase();
   const cacheKey = `fx:USD:${normalized}`;
@@ -464,7 +465,22 @@ export const getAiRecommendation = async (payload: {
   links: SearchResult[];
 }) => {
   const env = getServerEnv();
-  const apiKey = requireValue(env.openrouterApiKey, "OPENROUTER_API_KEY");
+  const apiKey = env.openrouterApiKey;
+  if (!apiKey) {
+    return [
+      "### Best Setup",
+      "- Start with efficient hardware that has known wattage and market availability in your region.",
+      "",
+      "### Why",
+      "- This keeps power costs predictable while you validate real-world uptime and maintenance.",
+      "",
+      "### Risks",
+      "- Profitability can swing with network difficulty, token price, and exchange spread.",
+      "",
+      "### Next Steps",
+      "- Add API keys in deployment settings to unlock live market and AI-enriched recommendations.",
+    ].join("\n");
+  }
   const safeLinks = payload.links
     .slice(0, 6)
     .map((item) => {
