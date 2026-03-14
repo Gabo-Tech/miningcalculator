@@ -1,7 +1,3 @@
-type ChromiumApi = {
-  launch: (options: { headless: boolean }) => Promise<any>;
-};
-
 type SearchResult = {
   title: string;
   snippet: string;
@@ -88,13 +84,20 @@ const sanitizeForMatch = (value: string): string =>
     .replace(/\s+/g, " ")
     .trim();
 
-const loadChromium = async (): Promise<ChromiumApi | null> => {
-  try {
-    const playwright = (await import("playwright")) as unknown as { chromium?: ChromiumApi };
-    return playwright.chromium || null;
-  } catch {
-    return null;
-  }
+const htmlToText = (html: string): string =>
+  html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const extractTitleFromHtml = (html: string): string | null => {
+  const match = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (!match?.[1]) return null;
+  return htmlToText(match[1]);
 };
 
 export const minerNameMatchesOffer = (minerName: string, offerTitle: string): boolean => {
@@ -124,36 +127,30 @@ export const crawlOffersFromSearchResults = async (
     .filter((item) => pickAdapter(item.hostname) !== null);
 
   if (!trusted.length) return [];
+  const offers: CrawledOffer[] = [];
 
-  const chromium = await loadChromium();
-  if (!chromium) return [];
+  for (const item of trusted) {
+    const adapter = pickAdapter(item.hostname);
+    if (!adapter) continue;
 
-  let browser: Awaited<ReturnType<ChromiumApi["launch"]>> | null = null;
-  try {
-    browser = await chromium.launch({ headless: true });
-    const offers: CrawledOffer[] = [];
-
-    for (const item of trusted) {
-      const adapter = pickAdapter(item.hostname);
-      if (!adapter) continue;
-
-      const page = await browser.newPage();
-      try {
-        await page.goto(item.link, { waitUntil: "domcontentloaded", timeout: 12000 });
-        const title = (await page.title()) || item.title;
-        const bodyText = await page.locator("body").innerText({ timeout: 4000 });
-        offers.push(adapter.extract(item.link, title, bodyText || item.snippet));
-      } catch {
-      } finally {
-        await page.close();
-      }
+    try {
+      const response = await fetch(item.link, {
+        method: "GET",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (compatible; MinerProfitabilityCalculatorBot/1.0; +https://example.com/bot)",
+        },
+      });
+      if (!response.ok) continue;
+      const html = await response.text();
+      const title = extractTitleFromHtml(html) || item.title;
+      const bodyText = htmlToText(html);
+      offers.push(adapter.extract(item.link, title, bodyText || item.snippet));
+    } catch {
     }
-    return offers;
-  } catch {
-    return [];
-  } finally {
-    if (browser) await browser.close();
   }
+
+  return offers;
 };
 
 export const getCrawlerHealth = async (): Promise<{
@@ -161,27 +158,10 @@ export const getCrawlerHealth = async (): Promise<{
   status: "ok" | "error";
   detail: string;
 }> => {
-  const chromium = await loadChromium();
-  if (!chromium) {
-    return {
-      provider: "crawler",
-      status: "error",
-      detail: "Playwright unavailable: package not available in current runtime",
-    };
-  }
-
-  try {
-    await chromium.launch({ headless: true }).then((browser) => browser.close());
-    return { provider: "crawler", status: "ok", detail: "Playwright Chromium available" };
-  } catch (error) {
-    return {
-      provider: "crawler",
-      status: "error",
-      detail:
-        error instanceof Error
-          ? `Playwright unavailable: ${error.message}`
-          : "Playwright unavailable",
-    };
-  }
+  return {
+    provider: "crawler",
+    status: "ok",
+    detail: "HTTP crawler available",
+  };
 };
 
