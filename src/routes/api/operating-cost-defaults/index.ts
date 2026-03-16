@@ -2,11 +2,12 @@ import type { RequestHandler } from "@builder.io/qwik-city";
 import { getOperatingCostDefaults } from "~/lib/server/services";
 import { limitString, rateLimit } from "~/lib/server/security";
 
-export const onGet: RequestHandler = async ({ json, query, request }) => {
+export const onGet: RequestHandler = async ({ env, json, query, request }) => {
   const limited = await rateLimit(request.headers, {
     keyPrefix: "operating-cost-defaults",
     max: 40,
     windowSeconds: 60,
+    envGetter: env,
   });
   if (!limited.allowed) {
     json(429, { error: "rate_limited", retryAfterSec: limited.retryAfterSec });
@@ -29,7 +30,7 @@ export const onGet: RequestHandler = async ({ json, query, request }) => {
     transform: (value) => value.toUpperCase(),
   });
   try {
-    const defaults = await getOperatingCostDefaults(coin, country, currency);
+    const defaults = await getOperatingCostDefaults(coin, country, currency, env);
     json(200, defaults);
   } catch {
     json(200, {

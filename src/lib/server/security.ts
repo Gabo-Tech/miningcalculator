@@ -1,4 +1,5 @@
 import { getRedisClient } from "./cache";
+import type { ServerEnvGetter } from "./env";
 
 const inMemoryRateWindow = new Map<string, { count: number; resetAt: number }>();
 
@@ -87,11 +88,12 @@ export const rateLimit = async (
     keyPrefix: string;
     max: number;
     windowSeconds: number;
+    envGetter?: ServerEnvGetter;
   },
 ): Promise<{ allowed: boolean; retryAfterSec: number }> => {
   const ip = getRequesterIpSafe(headers);
   const key = `ratelimit:${options.keyPrefix}:${ip}`;
-  const redis = getRedisClient();
+  const redis = getRedisClient(options.envGetter);
   const retryAfter = options.windowSeconds;
 
   if (redis) {

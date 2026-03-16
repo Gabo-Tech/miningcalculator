@@ -2,11 +2,12 @@ import type { RequestHandler } from "@builder.io/qwik-city";
 import { getProviderHealth } from "~/lib/server/services";
 import { rateLimit, sanitizePublicError } from "~/lib/server/security";
 
-export const onGet: RequestHandler = async ({ json, request }) => {
+export const onGet: RequestHandler = async ({ env, json, request }) => {
   const limited = await rateLimit(request.headers, {
     keyPrefix: "provider-health",
     max: 12,
     windowSeconds: 60,
+    envGetter: env,
   });
   if (!limited.allowed) {
     json(429, { error: "rate_limited", retryAfterSec: limited.retryAfterSec });
@@ -14,7 +15,7 @@ export const onGet: RequestHandler = async ({ json, request }) => {
   }
 
   try {
-    const providers = await getProviderHealth();
+    const providers = await getProviderHealth(env);
     const hasError = providers.some((provider) => provider.status === "error");
     const hasMissing = providers.some((provider) => provider.status === "missing");
     json(200, {

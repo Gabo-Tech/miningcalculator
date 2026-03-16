@@ -13,11 +13,12 @@ type RecommendationPayload = {
   links: Array<{ title: string; snippet: string; link: string }>;
 };
 
-export const onPost: RequestHandler = async ({ json, parseBody, request }) => {
+export const onPost: RequestHandler = async ({ env, json, parseBody, request }) => {
   const limited = await rateLimit(request.headers, {
     keyPrefix: "ai-recommendation",
     max: 20,
     windowSeconds: 60,
+    envGetter: env,
   });
   if (!limited.allowed) {
     json(429, { error: "rate_limited", retryAfterSec: limited.retryAfterSec });
@@ -81,7 +82,7 @@ export const onPost: RequestHandler = async ({ json, parseBody, request }) => {
   };
 
   try {
-    const recommendation = await getAiRecommendation(safePayload);
+    const recommendation = await getAiRecommendation(safePayload, env);
     json(200, { recommendation });
   } catch {
     const safe = sanitizePublicError("ai_recommendation_failed");

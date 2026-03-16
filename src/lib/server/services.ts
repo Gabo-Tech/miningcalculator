@@ -6,7 +6,7 @@ import {
   getCrawlerHealth,
   minerNameMatchesOffer,
 } from "./crawlers";
-import { getServerEnv } from "./env";
+import { getServerEnv, type ServerEnvGetter } from "./env";
 import { BASE_MINER_CANDIDATES, type MinerCandidate } from "./miner-candidates";
 import { limitString, safeHttpUrl } from "./security";
 
@@ -184,8 +184,11 @@ const classifyMineability = (
   return { mineable: null, reason: "unknown" };
 };
 
-const getCoinIdBySymbol = async (symbol: string): Promise<string | null> => {
-  const env = getServerEnv();
+const getCoinIdBySymbol = async (
+  symbol: string,
+  envGetter?: ServerEnvGetter,
+): Promise<string | null> => {
+  const env = getServerEnv(envGetter);
   const normalized = symbol.toUpperCase();
   const fromStatic = COINPAPRIKA_BY_SYMBOL[normalized];
   if (fromStatic) return fromStatic;
@@ -204,11 +207,14 @@ const getCoinIdBySymbol = async (symbol: string): Promise<string | null> => {
       .filter((coin) => (coin.symbol || "").toUpperCase() === normalized && coin.id)
       .sort((a, b) => (a.rank ?? 999999) - (b.rank ?? 999999))[0];
     return exact?.id || null;
-  });
+  }, envGetter);
 };
 
-export const searchCoins = async (query: string): Promise<CoinSearchItem[]> => {
-  const env = getServerEnv();
+export const searchCoins = async (
+  query: string,
+  envGetter?: ServerEnvGetter,
+): Promise<CoinSearchItem[]> => {
+  const env = getServerEnv(envGetter);
   const q = query.trim();
   if (!q) return [];
   const cacheKey = `coin-search:${q.toLowerCase()}`;
@@ -243,7 +249,7 @@ export const searchCoins = async (query: string): Promise<CoinSearchItem[]> => {
           reason: classification.reason,
         };
       });
-  });
+  }, envGetter);
 };
 
 export const getRequesterIp = (headers: Headers): string | null => {
@@ -349,8 +355,8 @@ export const resolveCountryProfile = async (rawValue: string) => {
   });
 };
 
-export const getGeoProfile = async (ip: string | null) => {
-  const env = getServerEnv();
+export const getGeoProfile = async (ip: string | null, envGetter?: ServerEnvGetter) => {
+  const env = getServerEnv(envGetter);
   const token = requireValue(env.ipinfoToken, "IPINFO_TOKEN");
   const cacheKey = `geo:${ip ?? "self"}`;
   return withCache(cacheKey, 60 * 60, async () => {
@@ -376,12 +382,15 @@ export const getGeoProfile = async (ip: string | null) => {
       electricityPrice: defaults.electricity,
       taxRate: defaults.taxRate,
     };
-  });
+  }, envGetter);
 };
 
-export const getUsdFxRate = async (targetCurrency: string): Promise<number> => {
+export const getUsdFxRate = async (
+  targetCurrency: string,
+  envGetter?: ServerEnvGetter,
+): Promise<number> => {
   if (!targetCurrency || targetCurrency === "USD") return 1;
-  const env = getServerEnv();
+  const env = getServerEnv(envGetter);
   const apiKey = env.exchangerateApiKey;
   if (!apiKey) return 1;
 
@@ -397,13 +406,16 @@ export const getUsdFxRate = async (targetCurrency: string): Promise<number> => {
       conversion_rates?: Record<string, number>;
     };
     return data.conversion_rates?.[normalized] || 1;
-  });
+  }, envGetter);
 };
 
-export const getCoinPriceUsd = async (symbol: string): Promise<number | null> => {
-  const env = getServerEnv();
+export const getCoinPriceUsd = async (
+  symbol: string,
+  envGetter?: ServerEnvGetter,
+): Promise<number | null> => {
+  const env = getServerEnv(envGetter);
   const normalized = symbol.toUpperCase();
-  const coinId = await getCoinIdBySymbol(normalized);
+  const coinId = await getCoinIdBySymbol(normalized, envGetter);
   if (!coinId) return null;
 
   const cacheKey = `coin:${normalized}`;
@@ -422,14 +434,15 @@ export const getCoinPriceUsd = async (symbol: string): Promise<number | null> =>
     };
     const price = data.quotes?.USD?.price;
     return typeof price === "number" ? price : null;
-  });
+  }, envGetter);
 };
 
 export const searchMiningHardware = async (
   coinName: string,
   country: string,
+  envGetter?: ServerEnvGetter,
 ): Promise<SearchResult[]> => {
-  const env = getServerEnv();
+  const env = getServerEnv(envGetter);
   const apiKey = requireValue(env.serpApiKey, "SERPAPI_API_KEY");
   const query = `${coinName} mining hardware best cpu gpu asic buy ${country}`;
   const cacheKey = `serp:${query}`;
@@ -451,7 +464,7 @@ export const searchMiningHardware = async (
       .map(sanitizeSearchResult)
       .filter((item): item is SearchResult => !!item)
       .slice(0, 6);
-  });
+  }, envGetter);
 };
 
 export const getAiRecommendation = async (payload: {
@@ -463,8 +476,8 @@ export const getAiRecommendation = async (payload: {
   taxRate: number;
   coinPriceUsd: number | null;
   links: SearchResult[];
-}) => {
-  const env = getServerEnv();
+}, envGetter?: ServerEnvGetter) => {
+  const env = getServerEnv(envGetter);
   const apiKey = env.openrouterApiKey;
   if (!apiKey) {
     return [
@@ -529,7 +542,7 @@ export const getAiRecommendation = async (payload: {
       data.choices?.[0]?.message?.content ||
       "No recommendation available right now. Please retry."
     );
-  });
+  }, envGetter);
 };
 
 type OperatingCostDefaults = {
@@ -580,6 +593,7 @@ export const getOperatingCostDefaults = async (
   coinSymbol: string,
   country: string,
   currency: string,
+  envGetter?: ServerEnvGetter,
 ): Promise<OperatingCostDefaults> => {
   const symbol = (coinSymbol || "BTC").toUpperCase();
   const localDefaults = FALLBACK_POOL_FEE_BY_COIN[symbol] ?? 1.75;
@@ -598,7 +612,7 @@ export const getOperatingCostDefaults = async (
     source: "fallback",
   };
 
-  const env = getServerEnv();
+  const env = getServerEnv(envGetter);
   if (!env.openrouterApiKey) return fallback;
   const cacheKey = `operating-defaults:v2:${symbol}:${country}:${currency}`;
   return withCache(cacheKey, 60 * 30, async () => {
@@ -648,12 +662,13 @@ export const getOperatingCostDefaults = async (
     } catch {
       return fallback;
     }
-  });
+  }, envGetter);
 };
 
 export const getMinerCandidates = async (
   coinSymbol: string,
   country: string,
+  envGetter?: ServerEnvGetter,
 ): Promise<{
   miners: MinerCandidate[];
   sources: SearchResult[];
@@ -677,7 +692,7 @@ export const getMinerCandidates = async (
 
     const coinName = COIN_NAME_BY_SYMBOL[symbol] || symbol;
     try {
-      const sources = await searchMiningHardware(coinName, country || "global");
+      const sources = await searchMiningHardware(coinName, country || "global", envGetter);
       const offers = await crawlOffersFromSearchResults(sources);
       const primaryBuyResult = sources.find(isLikelyCommerceResult);
       const primaryUrl = primaryBuyResult?.link;
@@ -713,7 +728,7 @@ export const getMinerCandidates = async (
         sourceMode: "fallback",
       };
     }
-  });
+  }, envGetter);
 };
 
 const checkProvider = async (
@@ -732,8 +747,8 @@ const checkProvider = async (
   }
 };
 
-export const getProviderHealth = async (): Promise<ProviderHealth[]> => {
-  const env = getServerEnv();
+export const getProviderHealth = async (envGetter?: ServerEnvGetter): Promise<ProviderHealth[]> => {
+  const env = getServerEnv(envGetter);
   return withCache("provider-health", 60, async () => {
     const coinpaprika = await checkProvider("coinpaprika", async () => {
       const url = `${env.coinpaprikaBaseUrl.replace(/\/$/, "")}/global`;
@@ -775,10 +790,10 @@ export const getProviderHealth = async (): Promise<ProviderHealth[]> => {
       if (!response.ok) throw new Error(`OpenRouter health request failed: ${response.status}`);
     });
 
-    const cache = await pingCache();
+    const cache = await pingCache(envGetter);
     const crawler = await getCrawlerHealth();
 
     return [coinpaprika, serpapi, ipinfo, exchangerate, openrouter, cache, crawler];
-  });
+  }, envGetter);
 };
 

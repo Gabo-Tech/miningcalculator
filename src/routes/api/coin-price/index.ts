@@ -2,11 +2,12 @@ import type { RequestHandler } from "@builder.io/qwik-city";
 import { getCoinPriceUsd } from "~/lib/server/services";
 import { limitString, rateLimit, sanitizePublicError } from "~/lib/server/security";
 
-export const onGet: RequestHandler = async ({ json, query, request }) => {
+export const onGet: RequestHandler = async ({ env, json, query, request }) => {
   const limited = await rateLimit(request.headers, {
     keyPrefix: "coin-price",
     max: 120,
     windowSeconds: 60,
+    envGetter: env,
   });
   if (!limited.allowed) {
     json(429, { error: "rate_limited", retryAfterSec: limited.retryAfterSec });
@@ -26,7 +27,7 @@ export const onGet: RequestHandler = async ({ json, query, request }) => {
   }
 
   try {
-    const priceUsd = await getCoinPriceUsd(symbol);
+    const priceUsd = await getCoinPriceUsd(symbol, env);
     json(200, {
       symbol,
       priceUsd,

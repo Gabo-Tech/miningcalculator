@@ -1,10 +1,10 @@
 import { Redis } from "@upstash/redis";
-import { getServerEnv } from "./env";
+import { getServerEnv, type ServerEnvGetter } from "./env";
 
 const memoryCache = new Map<string, { expiresAt: number; value: string }>();
 
-export const getRedisClient = (): Redis | null => {
-  const env = getServerEnv();
+export const getRedisClient = (envGetter?: ServerEnvGetter): Redis | null => {
+  const env = getServerEnv(envGetter);
   if (!env.upstashRedisRestUrl || !env.upstashRedisRestToken) return null;
   return new Redis({
     url: env.upstashRedisRestUrl,
@@ -12,7 +12,7 @@ export const getRedisClient = (): Redis | null => {
   });
 };
 
-export const getCached = async <T>(key: string): Promise<T | null> => {
+export const getCached = async <T>(key: string, envGetter?: ServerEnvGetter): Promise<T | null> => {
   const now = Date.now();
   const cached = memoryCache.get(key);
   if (cached && cached.expiresAt > now) {
@@ -20,7 +20,7 @@ export const getCached = async <T>(key: string): Promise<T | null> => {
   }
   if (cached) memoryCache.delete(key);
 
-  const redis = getRedisClient();
+  const redis = getRedisClient(envGetter);
   if (!redis) return null;
 
   const raw = await redis.get<unknown>(key);
@@ -33,6 +33,7 @@ export const setCached = async <T>(
   key: string,
   value: T,
   ttlSeconds: number,
+  envGetter?: ServerEnvGetter,
 ): Promise<void> => {
   const serialized = JSON.stringify(value);
   memoryCache.set(key, {
@@ -40,7 +41,7 @@ export const setCached = async <T>(
     value: serialized,
   });
 
-  const redis = getRedisClient();
+  const redis = getRedisClient(envGetter);
   if (!redis) return;
   await redis.set(key, serialized, { ex: ttlSeconds });
 };
@@ -49,20 +50,21 @@ export const withCache = async <T>(
   key: string,
   ttlSeconds: number,
   fn: () => Promise<T>,
+  envGetter?: ServerEnvGetter,
 ): Promise<T> => {
-  const cached = await getCached<T>(key);
+  const cached = await getCached<T>(key, envGetter);
   if (cached) return cached;
   const fresh = await fn();
-  await setCached(key, fresh, ttlSeconds);
+  await setCached(key, fresh, ttlSeconds, envGetter);
   return fresh;
 };
 
-export const pingCache = async (): Promise<{
+export const pingCache = async (envGetter?: ServerEnvGetter): Promise<{
   provider: "upstash";
   status: "ok" | "missing" | "error";
   detail: string;
 }> => {
-  const redis = getRedisClient();
+  const redis = getRedisClient(envGetter);
   if (!redis) {
     return {
       provider: "upstash",

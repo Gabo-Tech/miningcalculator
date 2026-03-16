@@ -12,6 +12,10 @@ type ServerEnv = {
   upstashRedisRestToken?: string;
 };
 
+export type ServerEnvGetter = {
+  get: (key: string) => string | undefined;
+};
+
 const normalizeEnvValue = (value: string | undefined): string | undefined => {
   if (!value) return undefined;
   const trimmed = value.trim();
@@ -29,28 +33,31 @@ const normalizeEnvValue = (value: string | undefined): string | undefined => {
   return trimmed;
 };
 
-const readEnv = (...keys: string[]): string | undefined => {
+const readEnv = (
+  getter: ServerEnvGetter | undefined,
+  ...keys: string[]
+): string | undefined => {
   for (const key of keys) {
-    const value = normalizeEnvValue(process.env[key]);
+    const value = normalizeEnvValue(getter?.get(key) ?? process.env[key]);
     if (value) return value;
   }
   return undefined;
 };
 
-export const getServerEnv = (): ServerEnv => ({
-  coinpaprikaApiKey: readEnv("COINPAPRIKA_API_KEY"),
+export const getServerEnv = (getter?: ServerEnvGetter): ServerEnv => ({
+  coinpaprikaApiKey: readEnv(getter, "COINPAPRIKA_API_KEY"),
   coinpaprikaBaseUrl:
-    readEnv("COINPAPRIKA_BASE_URL") || "https://api.coinpaprika.com/v1",
-  openrouterApiKey: readEnv("OPENROUTER_API_KEY", "OPEN_ROUTER_API_KEY"),
-  serpApiKey: readEnv("SERPAPI_API_KEY", "SERAPI_API_KEY"),
-  serpApiBaseUrl: readEnv("SERPAPI_BASE_URL") || "https://serpapi.com/search",
-  ipinfoToken: readEnv("IPINFO_TOKEN", "IPINFO_API_TOKEN"),
-  ipinfoBaseUrl: readEnv("IPINFO_BASE_URL") || "https://ipinfo.io",
-  exchangerateApiKey: readEnv("EXCHANGERATE_API_KEY", "EXCHANGE_RATE_API_KEY"),
+    readEnv(getter, "COINPAPRIKA_BASE_URL") || "https://api.coinpaprika.com/v1",
+  openrouterApiKey: readEnv(getter, "OPENROUTER_API_KEY", "OPEN_ROUTER_API_KEY"),
+  serpApiKey: readEnv(getter, "SERPAPI_API_KEY", "SERAPI_API_KEY"),
+  serpApiBaseUrl: readEnv(getter, "SERPAPI_BASE_URL") || "https://serpapi.com/search",
+  ipinfoToken: readEnv(getter, "IPINFO_TOKEN", "IPINFO_API_TOKEN"),
+  ipinfoBaseUrl: readEnv(getter, "IPINFO_BASE_URL") || "https://ipinfo.io",
+  exchangerateApiKey: readEnv(getter, "EXCHANGERATE_API_KEY", "EXCHANGE_RATE_API_KEY"),
   exchangerateBaseUrl:
-    readEnv("EXCHANGERATE_BASE_URL", "EXCHANGE_RATE_BASE_URL") ||
+    readEnv(getter, "EXCHANGERATE_BASE_URL", "EXCHANGE_RATE_BASE_URL") ||
     "https://v6.exchangerate-api.com/v6",
-  upstashRedisRestUrl: readEnv("UPSTASH_REDIS_REST_URL", "KV_REST_API_URL"),
-  upstashRedisRestToken: readEnv("UPSTASH_REDIS_REST_TOKEN", "KV_REST_API_TOKEN"),
+  upstashRedisRestUrl: readEnv(getter, "UPSTASH_REDIS_REST_URL", "KV_REST_API_URL"),
+  upstashRedisRestToken: readEnv(getter, "UPSTASH_REDIS_REST_TOKEN", "KV_REST_API_TOKEN"),
 });
 

@@ -2,11 +2,12 @@ import type { RequestHandler } from "@builder.io/qwik-city";
 import { searchMiningHardware } from "~/lib/server/services";
 import { limitString, rateLimit, sanitizePublicError } from "~/lib/server/security";
 
-export const onGet: RequestHandler = async ({ json, query, request }) => {
+export const onGet: RequestHandler = async ({ env, json, query, request }) => {
   const limited = await rateLimit(request.headers, {
     keyPrefix: "miner-search",
     max: 20,
     windowSeconds: 60,
+    envGetter: env,
   });
   if (!limited.allowed) {
     json(429, { error: "rate_limited", retryAfterSec: limited.retryAfterSec });
@@ -22,7 +23,7 @@ export const onGet: RequestHandler = async ({ json, query, request }) => {
   }
 
   try {
-    const results = await searchMiningHardware(coin, country);
+    const results = await searchMiningHardware(coin, country, env);
     json(200, { coin, country, results, ts: Date.now() });
   } catch {
     const safe = sanitizePublicError("miner_search_failed");

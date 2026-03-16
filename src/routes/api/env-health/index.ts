@@ -6,18 +6,22 @@ const hasValue = (value: string | undefined): boolean => {
   return value.trim().length > 0;
 };
 
-const firstPresentKey = (...keys: string[]): string | null => {
+const firstPresentKey = (
+  env: { get: (key: string) => string | undefined },
+  ...keys: string[]
+): string | null => {
   for (const key of keys) {
-    if (hasValue(process.env[key])) return key;
+    if (hasValue(env.get(key) ?? process.env[key])) return key;
   }
   return null;
 };
 
-export const onGet: RequestHandler = async ({ json, request }) => {
+export const onGet: RequestHandler = async ({ env, json, request }) => {
   const limited = await rateLimit(request.headers, {
     keyPrefix: "env-health",
     max: 20,
     windowSeconds: 60,
+    envGetter: env,
   });
   if (!limited.allowed) {
     json(429, { error: "rate_limited", retryAfterSec: limited.retryAfterSec });
@@ -37,13 +41,30 @@ export const onGet: RequestHandler = async ({ json, request }) => {
   ];
 
   json(200, {
+    runtime: {
+      edgeRuntime:
+        typeof (globalThis as { EdgeRuntime?: unknown }).EdgeRuntime === "string"
+          ? (globalThis as { EdgeRuntime?: string }).EdgeRuntime
+          : null,
+      hasProcess: typeof process !== "undefined",
+      nodeEnv: env.get("NODE_ENV") ?? process.env.NODE_ENV ?? null,
+    },
+    request: {
+      host: request.headers.get("host"),
+      forwardedHost: request.headers.get("x-forwarded-host"),
+      forwardedProto: request.headers.get("x-forwarded-proto"),
+      vercelProxySignature: request.headers.get("x-vercel-proxy-signature"),
+      vercelIpCountry: request.headers.get("x-vercel-ip-country"),
+    },
     env: {
-      vercelEnv: process.env.VERCEL_ENV || null,
-      vercelUrl: process.env.VERCEL_URL || null,
-      projectProductionUrl: process.env.VERCEL_PROJECT_PRODUCTION_URL || null,
+      vercel: env.get("VERCEL") ?? process.env.VERCEL ?? null,
+      vercelEnv: env.get("VERCEL_ENV") ?? process.env.VERCEL_ENV ?? null,
+      vercelUrl: env.get("VERCEL_URL") ?? process.env.VERCEL_URL ?? null,
+      projectProductionUrl:
+        env.get("VERCEL_PROJECT_PRODUCTION_URL") ?? process.env.VERCEL_PROJECT_PRODUCTION_URL ?? null,
     },
     checks: checks.map((check) => {
-      const presentAs = firstPresentKey(...check.aliases);
+      const presentAs = firstPresentKey(env, ...check.aliases);
       return {
         expected: check.expected,
         present: !!presentAs,

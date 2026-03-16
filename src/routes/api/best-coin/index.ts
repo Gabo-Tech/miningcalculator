@@ -28,11 +28,12 @@ const COIN_VOLATILITY_PENALTY: Record<string, number> = {
   XMR: 0.24,
 };
 
-export const onPost: RequestHandler = async ({ json, parseBody, request }) => {
+export const onPost: RequestHandler = async ({ env, json, parseBody, request }) => {
   const limited = await rateLimit(request.headers, {
     keyPrefix: "best-coin",
     max: 16,
     windowSeconds: 60,
+    envGetter: env,
   });
   if (!limited.allowed) {
     json(429, { error: "rate_limited", retryAfterSec: limited.retryAfterSec });
@@ -69,8 +70,8 @@ export const onPost: RequestHandler = async ({ json, parseBody, request }) => {
 
     for (const symbol of candidateSymbols) {
       const [coinPriceUsd, minerData] = await Promise.all([
-        getCoinPriceUsd(symbol),
-        getMinerCandidates(symbol, country),
+        getCoinPriceUsd(symbol, env),
+        getMinerCandidates(symbol, country, env),
       ]);
       const miners = minerData.miners || [];
       if (!miners.length) continue;
