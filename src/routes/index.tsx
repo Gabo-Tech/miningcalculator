@@ -7,7 +7,7 @@ import {
   useStore,
   useVisibleTask$,
 } from "@builder.io/qwik";
-import type { DocumentHead } from "@builder.io/qwik-city";
+import { useLocation, type DocumentHead } from "@builder.io/qwik-city";
 import * as d3 from "d3";
 import { COUNTRY_DEFAULTS, COUNTRY_OPTIONS, resolveCurrencySelection } from "../lib/config/localization-data";
 import { I18N } from "../lib/i18n/translations";
@@ -277,6 +277,61 @@ const parseAiSections = (text: string): AiSection[] => {
 
 export default component$(() => {
   const copyrightFooterText = `© ${new Date().getFullYear()} Mining Profit Lab`;
+  const loc = useLocation();
+  const canonicalPageUrl = `${loc.url.origin}${loc.url.pathname}`;
+  const seoStructuredData = JSON.stringify({
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "@id": `${canonicalPageUrl}#app`,
+        name: "Mining Profit Lab",
+        applicationCategory: "FinanceApplication",
+        operatingSystem: "Web",
+        description:
+          "Global crypto mining profitability calculator with live coin data, country-specific electricity estimates, tax impact, and miner ROI analysis.",
+        url: canonicalPageUrl,
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+        },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${canonicalPageUrl}#faq`,
+        mainEntity: [
+          {
+            "@type": "Question",
+            name: "How is mining profitability calculated?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text:
+                "Mining profitability is estimated by comparing monthly revenue against electricity, pool fees, taxes, and additional operating costs. ROI is based on net monthly profit and hardware purchase price.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Which coins and miners can I compare?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text:
+                "You can compare major mineable cryptocurrencies, evaluate multiple ASIC models, and review profitability ranking, cost mix, and projected returns.",
+            },
+          },
+          {
+            "@type": "Question",
+            name: "Do electricity rates and country taxes affect results?",
+            acceptedAnswer: {
+              "@type": "Answer",
+              text:
+                "Yes. The calculator includes country-aware electricity and tax assumptions, and supports custom values so your estimate better reflects local operating conditions.",
+            },
+          },
+        ],
+      },
+    ],
+  });
   const theme = useSignal<Theme>("dark");
   const lang = useSignal("en");
   const selectedCoin = useSignal("BTC");
@@ -1780,6 +1835,7 @@ export default component$(() => {
 
   return (
     <main class="page">
+      <script type="application/ld+json" dangerouslySetInnerHTML={seoStructuredData} />
       {calcNotice.value && (
         <div class="calc-notice" role="status" aria-live="polite">
           <span class="loader-inline" aria-hidden="true" />
@@ -2679,6 +2735,32 @@ export default component$(() => {
         </>
       )}
 
+      <section id="seo-faq" class="card section-flow">
+        <h2>Mining profitability calculator FAQ</h2>
+        <article>
+          <h3>How is crypto mining profit estimated?</h3>
+          <p>
+            Monthly profitability is calculated from projected mining revenue minus electricity,
+            pool fees, tax, and operating costs. The tool then estimates ROI from hardware cost
+            and expected monthly net profit.
+          </p>
+        </article>
+        <article>
+          <h3>Can I compare ASIC miners by coin and country?</h3>
+          <p>
+            Yes. You can compare miners across popular mineable coins and apply local electricity
+            and tax assumptions to identify the best fit for your region and budget.
+          </p>
+        </article>
+        <article>
+          <h3>Why do profitability results change over time?</h3>
+          <p>
+            Mining profit moves with coin price, network difficulty, fees, and power costs. Review
+            your calculations regularly and update assumptions when market conditions change.
+          </p>
+        </article>
+      </section>
+
       <section id="provider-health" class="card section-flow provider-footer">
         <div class="health-header">
           <h3>{tx.value("providerHealthTitle")}</h3>
@@ -2745,12 +2827,70 @@ export default component$(() => {
 });
 
 export const head: DocumentHead = {
-  title: "Mining Profitability Calculator",
+  title: "Crypto Mining Profitability Calculator (ASIC & GPU) | Mining Profit Lab",
   meta: [
     {
       name: "description",
       content:
-        "Global cryptocurrency mining profitability calculator with country-aware electricity and tax estimates.",
+        "Estimate Bitcoin and altcoin mining profits with live data, country-based electricity and tax inputs, ASIC/GPU comparisons, and ROI projections.",
+    },
+    {
+      name: "keywords",
+      content:
+        "mining profitability calculator, bitcoin mining calculator, asic miner roi, crypto mining profit, gpu mining calculator, mining electricity cost",
+    },
+    {
+      name: "author",
+      content: "Mining Profit Lab",
+    },
+    {
+      name: "theme-color",
+      content: "#0b1220",
+    },
+    {
+      property: "og:type",
+      content: "website",
+    },
+    {
+      property: "og:site_name",
+      content: "Mining Profit Lab",
+    },
+    {
+      property: "og:title",
+      content: "Crypto Mining Profitability Calculator (ASIC & GPU)",
+    },
+    {
+      property: "og:description",
+      content:
+        "Compare miners, estimate net monthly mining profit, and model ROI with local electricity and tax assumptions.",
+    },
+    {
+      property: "og:image",
+      content: "/og-image.svg",
+    },
+    {
+      name: "twitter:card",
+      content: "summary_large_image",
+    },
+    {
+      name: "twitter:title",
+      content: "Crypto Mining Profitability Calculator (ASIC & GPU)",
+    },
+    {
+      name: "twitter:description",
+      content:
+        "Analyze crypto mining profitability using local costs, miner comparisons, and return-on-investment estimates.",
+    },
+    {
+      name: "twitter:image",
+      content: "/og-image.svg",
+    },
+  ],
+  links: [
+    {
+      rel: "preconnect",
+      href: "https://api.coinpaprika.com",
+      key: "coinpaprika-preconnect",
     },
   ],
 };

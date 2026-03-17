@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Mining Profit Lab - Crypto Mining Profitability Calculator</title>
+  <desc id="desc">Compare ASIC and GPU miner profitability with country-aware electricity and tax assumptions.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1220" />
+      <stop offset="100%" stop-color="#14294b" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect x="80" y="120" width="1040" height="390" rx="28" fill="#0f1c33" stroke="#1e3358" />
+  <text x="120" y="230" fill="#e2e8f0" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="700">
+    Mining Profit Lab
+  </text>
+  <text x="120" y="300" fill="#7dd3fc" font-family="Arial, Helvetica, sans-serif" font-size="38" font-weight="600">
+    Crypto Mining Profitability Calculator
+  </text>
+  <text x="120" y="360" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="28">
+    Compare ASIC and GPU miners with ROI projections
+  </text>
+  <text x="120" y="406" fill="#cbd5e1" font-family="Arial, Helvetica, sans-serif" font-size="28">
+    Country-aware electricity and tax estimates
+  </text>
+  <rect x="120" y="450" width="500" height="14" rx="7" fill="url(#accent)" />
+  <text x="1060" y="540" fill="#94a3b8" font-family="Arial, Helvetica, sans-serif" font-size="26" text-anchor="end">
+    mining profitability calculator
+  </text>
+</svg>
