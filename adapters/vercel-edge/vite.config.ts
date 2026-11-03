@@ -11,6 +11,16 @@ export default extendConfig(baseConfig, () => {
       },
       outDir: ".vercel/output/functions/_qwik-city.func",
     },
-    plugins: [vercelEdgeAdapter()],
+    plugins: [
+      vercelEdgeAdapter({
+        ssg: {
+          include: ["/", "/coins/*", "/miners/*"],
+          origin: "https://miningcalculator.gabo.rocks",
+          // The adapter otherwise writes an empty sitemap.xml into the static
+          // output, which Vercel serves instead of the sitemap route.
+          sitemapOutFile: null,
+        },
+      }),
+    ],
   };
 });
