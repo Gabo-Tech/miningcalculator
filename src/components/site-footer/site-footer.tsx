@@ -16,18 +16,6 @@ export const SiteFooter = component$(() => {
         </p>
         <ul class="featured-on-row" aria-labelledby="featured-on-label">
           <li>
-            <a href="https://tinylaunch.com" target="_blank" rel="noopener">
-              <img
-                src="https://tinylaunch.com/tinylaunch_badge_launching_soon.svg"
-                alt="TinyLaunch Badge"
-                width={619}
-                height={188}
-                loading="lazy"
-                style={{ width: "202px", height: "auto" }}
-              />
-            </a>
-          </li>
-          <li>
             <a
               href="https://launch-list.org/product/mining-profit-lab"
               target="_blank"
@@ -73,10 +61,22 @@ export const SiteFooter = component$(() => {
           </li>
         </ul>
       </div>
-      <p class="credit-note">
-        © {year} Mining Profit Lab · Built by{" "}
-        <a href={AUTHOR_URL}>{AUTHOR_NAME}</a>
-      </p>
+      <div class="footer-credits">
+        <p class="credit-note">
+          © {year} Mining Profit Lab · Built by{" "}
+          <a href={AUTHOR_URL}>{AUTHOR_NAME}</a>
+        </p>
+        <p class="credit-note">
+          Made with ❤️ by{" "}
+          <a
+            href="https://solutions.gabo.rocks/"
+            target="_blank"
+            rel="noopener"
+          >
+            GABO
+          </a>
+        </p>
+      </div>
       <ul class="sister-links">
         {SISTER_TOOLS.map((tool) => (
           <li key={tool.href}>
