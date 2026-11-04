@@ -7,13 +7,16 @@ import {
   useStore,
   useVisibleTask$,
 } from "@builder.io/qwik";
-import { useLocation, type DocumentHead } from "@builder.io/qwik-city";
+import { type DocumentHead } from "@builder.io/qwik-city";
 import * as d3 from "d3";
+import { CRYPTOS, MINERS, REFERENCE_COIN_PRICE_USD } from "../lib/catalog/hardware";
 import { COUNTRY_DEFAULTS, COUNTRY_OPTIONS, resolveCurrencySelection } from "../lib/config/localization-data";
 import { I18N } from "../lib/i18n/translations";
+import { COIN_GUIDES, MINER_GUIDES } from "../lib/seo/guides";
+import { HOME_DESCRIPTION, HOME_FAQS, buildHomeStructuredData, pageMeta } from "../lib/seo/site";
+import { SiteFooter } from "../components/site-footer/site-footer";
 
 type Theme = "dark" | "light";
-type Crypto = { symbol: string; name: string; minable: boolean | null };
 type CoinOption = {
   id?: string;
   symbol: string;
@@ -89,28 +92,6 @@ type OperatingCostDefaults = {
 
 type PayoutStrategy = "hold_cold_wallet" | "monthly_cashout";
 
-const CRYPTOS: Crypto[] = [
-  { symbol: "BTC", name: "Bitcoin", minable: true },
-  { symbol: "LTC", name: "Litecoin", minable: true },
-  { symbol: "DOGE", name: "Dogecoin", minable: true },
-  { symbol: "KAS", name: "Kaspa", minable: true },
-  { symbol: "ETC", name: "Ethereum Classic", minable: true },
-  { symbol: "XMR", name: "Monero", minable: true },
-  { symbol: "ETH", name: "Ethereum", minable: false },
-  { symbol: "XRP", name: "XRP", minable: false },
-  { symbol: "SOL", name: "Solana", minable: false },
-  { symbol: "ADA", name: "Cardano", minable: false },
-];
-
-const REFERENCE_COIN_PRICE_USD: Record<string, number> = {
-  BTC: 65000,
-  LTC: 80,
-  DOGE: 0.12,
-  KAS: 0.13,
-  ETC: 30,
-  XMR: 130,
-};
-
 const BACKGROUND_ICONS: BackgroundIcon[] = [
   { symbol: "₿", x: "8%", y: "18%", size: "3.7rem", delay: "-1.2s", duration: "20s" },
   { symbol: "◇", x: "22%", y: "74%", size: "3.2rem", delay: "-6s", duration: "24s" },
@@ -119,75 +100,6 @@ const BACKGROUND_ICONS: BackgroundIcon[] = [
   { symbol: "₳", x: "66%", y: "26%", size: "3rem", delay: "-4.2s", duration: "23s" },
   { symbol: "✕", x: "81%", y: "68%", size: "3.5rem", delay: "-11s", duration: "25s" },
   { symbol: "⛏", x: "90%", y: "32%", size: "2.8rem", delay: "-2.5s", duration: "21s" },
-];
-
-const MINERS: Miner[] = [
-  {
-    id: "s21-pro",
-    name: "Antminer S21 Pro",
-    coin: "BTC",
-    hashRate: "234 TH/s",
-    powerWatts: 3510,
-    purchaseUsd: 4400,
-    revenuePerDayUsd: 13.2,
-    poolFeePct: 1,
-    buyUrl: "https://www.asicminervalue.com/",
-  },
-  {
-    id: "m60s",
-    name: "WhatsMiner M60S+",
-    coin: "BTC",
-    hashRate: "226 TH/s",
-    powerWatts: 3400,
-    purchaseUsd: 4200,
-    revenuePerDayUsd: 12.8,
-    poolFeePct: 1.5,
-    buyUrl: "https://www.asicminervalue.com/",
-  },
-  {
-    id: "l9",
-    name: "Antminer L9",
-    coin: "LTC",
-    hashRate: "17 GH/s",
-    powerWatts: 3360,
-    purchaseUsd: 8800,
-    revenuePerDayUsd: 20.1,
-    poolFeePct: 2,
-    buyUrl: "https://www.asicminervalue.com/",
-  },
-  {
-    id: "dg1-plus",
-    name: "Elphapex DG1+",
-    coin: "DOGE",
-    hashRate: "14 GH/s",
-    powerWatts: 3920,
-    purchaseUsd: 6900,
-    revenuePerDayUsd: 15.6,
-    poolFeePct: 2,
-    buyUrl: "https://www.asicminervalue.com/",
-  },
-  {
-    id: "ks5-pro",
-    name: "IceRiver KS5 Pro",
-    coin: "KAS",
-    hashRate: "21 TH/s",
-    powerWatts: 3150,
-    purchaseUsd: 14500,
-    revenuePerDayUsd: 24.3,
-    poolFeePct: 1,
-    buyUrl: "https://www.asicminervalue.com/",
-  },
-  {
-    id: "e9-pro",
-    name: "Jasminer X16-Q Pro",
-    coin: "ETC",
-    hashRate: "2.05 GH/s",
-    powerWatts: 520,
-    purchaseUsd: 3200,
-    revenuePerDayUsd: 4.6,
-    poolFeePct: 1.5,
-    buyUrl: "https://www.asicminervalue.com/",
-  },
 ];
 
 type RankedMiner = Miner & {
@@ -275,63 +187,9 @@ const parseAiSections = (text: string): AiSection[] => {
   return sections;
 };
 
+const seoStructuredData = buildHomeStructuredData();
+
 export default component$(() => {
-  const copyrightFooterText = `© ${new Date().getFullYear()} Mining Profit Lab`;
-  const loc = useLocation();
-  const canonicalPageUrl = `${loc.url.origin}${loc.url.pathname}`;
-  const seoStructuredData = JSON.stringify({
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "WebApplication",
-        "@id": `${canonicalPageUrl}#app`,
-        name: "Mining Profit Lab",
-        applicationCategory: "FinanceApplication",
-        operatingSystem: "Web",
-        description:
-          "Global crypto mining profitability calculator with live coin data, country-specific electricity estimates, tax impact, and miner ROI analysis.",
-        url: canonicalPageUrl,
-        offers: {
-          "@type": "Offer",
-          price: "0",
-          priceCurrency: "USD",
-        },
-      },
-      {
-        "@type": "FAQPage",
-        "@id": `${canonicalPageUrl}#faq`,
-        mainEntity: [
-          {
-            "@type": "Question",
-            name: "How is mining profitability calculated?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text:
-                "Mining profitability is estimated by comparing monthly revenue against electricity, pool fees, taxes, and additional operating costs. ROI is based on net monthly profit and hardware purchase price.",
-            },
-          },
-          {
-            "@type": "Question",
-            name: "Which coins and miners can I compare?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text:
-                "You can compare major mineable cryptocurrencies, evaluate multiple ASIC models, and review profitability ranking, cost mix, and projected returns.",
-            },
-          },
-          {
-            "@type": "Question",
-            name: "Do electricity rates and country taxes affect results?",
-            acceptedAnswer: {
-              "@type": "Answer",
-              text:
-                "Yes. The calculator includes country-aware electricity and tax assumptions, and supports custom values so your estimate better reflects local operating conditions.",
-            },
-          },
-        ],
-      },
-    ],
-  });
   const theme = useSignal<Theme>("dark");
   const lang = useSignal("en");
   const selectedCoin = useSignal("BTC");
@@ -1867,6 +1725,7 @@ export default component$(() => {
           <strong class="hero-brand">{tx.value("heroBrand")}</strong>
           <nav>
             <a href="#how-it-works">{tx.value("navHowItWorks")}</a>
+            <a href="#coin-guides">{tx.value("navGuides")}</a>
             <a href="#onboarding-form">{tx.value("navStart")}</a>
           </nav>
           <button
@@ -2735,30 +2594,37 @@ export default component$(() => {
         </>
       )}
 
+      <section id="coin-guides" class="card section-flow">
+        <h2>Mining profitability by coin</h2>
+        <p>
+          These guides list the reference miners and baseline inputs already used by the calculator.
+          Open the live tool to apply your electricity price, taxes, and current coin data.
+        </p>
+        <ul class="guide-link-list">
+          {COIN_GUIDES.map((coin) => (
+            <li key={coin.slug}>
+              <a href={coin.pathname}>{coin.h1}</a>
+            </li>
+          ))}
+        </ul>
+        <h3>Miner model baselines</h3>
+        <ul class="guide-link-list">
+          {MINER_GUIDES.map((miner) => (
+            <li key={miner.slug}>
+              <a href={miner.pathname}>{miner.h1}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+
       <section id="seo-faq" class="card section-flow">
         <h2>Mining profitability calculator FAQ</h2>
-        <article>
-          <h3>How is crypto mining profit estimated?</h3>
-          <p>
-            Monthly profitability is calculated from projected mining revenue minus electricity,
-            pool fees, tax, and operating costs. The tool then estimates ROI from hardware cost
-            and expected monthly net profit.
-          </p>
-        </article>
-        <article>
-          <h3>Can I compare ASIC miners by coin and country?</h3>
-          <p>
-            Yes. You can compare miners across popular mineable coins and apply local electricity
-            and tax assumptions to identify the best fit for your region and budget.
-          </p>
-        </article>
-        <article>
-          <h3>Why do profitability results change over time?</h3>
-          <p>
-            Mining profit moves with coin price, network difficulty, fees, and power costs. Review
-            your calculations regularly and update assumptions when market conditions change.
-          </p>
-        </article>
+        {HOME_FAQS.map((faq) => (
+          <article key={faq.question}>
+            <h3>{faq.question}</h3>
+            <p>{faq.answer}</p>
+          </article>
+        ))}
       </section>
 
       <section id="provider-health" class="card section-flow provider-footer">
@@ -2815,75 +2681,37 @@ export default component$(() => {
             ))}
           </div>
         )}
-        <p class="credit-note">
-          {copyrightFooterText} - {tx.value("madeBy")}{" "}
-          <a href="https://solutions.gabo.rocks" target="_blank" rel="noopener noreferrer">
-            GABO
-          </a>
-        </p>
       </section>
+      <SiteFooter />
     </main>
   );
 });
 
-export const head: DocumentHead = {
+const homeHead = pageMeta({
   title: "Crypto Mining Profitability Calculator (ASIC & GPU) | Mining Profit Lab",
+  description: HOME_DESCRIPTION,
+  pathname: "/",
+});
+
+export const head: DocumentHead = {
+  ...homeHead,
   meta: [
-    {
-      name: "description",
-      content:
-        "Estimate Bitcoin and altcoin mining profits with live data, country-based electricity and tax inputs, ASIC/GPU comparisons, and ROI projections.",
-    },
+    ...(homeHead.meta ?? []),
     {
       name: "keywords",
       content:
-        "mining profitability calculator, bitcoin mining calculator, asic miner roi, crypto mining profit, gpu mining calculator, mining electricity cost",
+        "crypto mining profitability calculator, mining profitability calculator, bitcoin mining calculator, asic miner roi, crypto mining profit, gpu mining calculator, mining electricity cost",
+      key: "keywords",
     },
     {
       name: "author",
       content: "Mining Profit Lab",
+      key: "author",
     },
     {
       name: "theme-color",
       content: "#0b1220",
-    },
-    {
-      property: "og:type",
-      content: "website",
-    },
-    {
-      property: "og:site_name",
-      content: "Mining Profit Lab",
-    },
-    {
-      property: "og:title",
-      content: "Crypto Mining Profitability Calculator (ASIC & GPU)",
-    },
-    {
-      property: "og:description",
-      content:
-        "Compare miners, estimate net monthly mining profit, and model ROI with local electricity and tax assumptions.",
-    },
-    {
-      property: "og:image",
-      content: "/og-image.svg",
-    },
-    {
-      name: "twitter:card",
-      content: "summary_large_image",
-    },
-    {
-      name: "twitter:title",
-      content: "Crypto Mining Profitability Calculator (ASIC & GPU)",
-    },
-    {
-      name: "twitter:description",
-      content:
-        "Analyze crypto mining profitability using local costs, miner comparisons, and return-on-investment estimates.",
-    },
-    {
-      name: "twitter:image",
-      content: "/og-image.svg",
+      key: "theme-color",
     },
   ],
   links: [

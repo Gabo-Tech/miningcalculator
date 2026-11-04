@@ -1,16 +1,20 @@
 import type { RequestHandler } from "@builder.io/qwik-city";
+import { indexableEntries } from "../../lib/seo/guides";
+import { xmlEscape } from "../../lib/seo/site";
 
-export const onGet: RequestHandler = async ({ url, headers, send }) => {
-  const now = new Date().toISOString();
-  const pageUrl = `${url.origin}/`;
+export const onGet: RequestHandler = async ({ headers, send }) => {
+  const urls = indexableEntries()
+    .map(
+      (entry) => `  <url>
+    <loc>${xmlEscape(entry.loc)}</loc>
+    <changefreq>${entry.changefreq}</changefreq>
+    <priority>${entry.priority}</priority>
+  </url>`,
+    )
+    .join("\n");
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>${pageUrl}</loc>
-    <lastmod>${now}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
+${urls}
 </urlset>
 `;
 
