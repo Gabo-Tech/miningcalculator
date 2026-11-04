@@ -1,4 +1,5 @@
 import { component$ } from "@builder.io/qwik";
+import { EMBED_PAGE_PATH, INDEX_PATH } from "../../lib/seo/resources";
 import { AUTHOR_NAME, AUTHOR_URL, SISTER_TOOLS } from "../../lib/seo/site";
 
 /**
@@ -61,6 +62,10 @@ export const SiteFooter = component$(() => {
           </li>
         </ul>
       </div>
+      <nav class="footer-links" aria-label="Resources">
+        <a href={INDEX_PATH}>Bitcoin mining profitability index</a>
+        <a href={EMBED_PAGE_PATH}>Embed this calculator</a>
+      </nav>
       <div class="footer-credits">
         <p class="credit-note">
           © {year} Mining Profit Lab · Built by{" "}

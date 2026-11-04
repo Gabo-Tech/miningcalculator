@@ -176,6 +176,16 @@ export type SitemapEntry = {
 export function indexableEntries(): SitemapEntry[] {
   return [
     { loc: absoluteUrl("/"), changefreq: "daily", priority: "1.0" },
+    {
+      loc: absoluteUrl("/bitcoin-mining-profitability-index/"),
+      changefreq: "daily",
+      priority: "0.9",
+    },
+    {
+      loc: absoluteUrl("/embed-calculator/"),
+      changefreq: "monthly",
+      priority: "0.7",
+    },
     ...COIN_GUIDES.map((guide) => ({
       loc: absoluteUrl(guide.pathname),
       changefreq: "weekly" as const,
