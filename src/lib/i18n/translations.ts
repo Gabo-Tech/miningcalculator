@@ -67,6 +67,8 @@ export const I18N: Record<string, LocalizedText> = {
     pillAiGuidance: "AI strategy guidance",
     heroHeadline: "Crypto Mining Profitability Calculator",
     navGuides: "Guides",
+    navIndex: "BTC index",
+    navEmbed: "Embed",
     heroSubtitleTail:
       "Compare miners, costs, taxes, and profitability in one guided flow tailored to your country and currency.",
     ctaStartCheck: "Start Profitability Check",

@@ -1726,6 +1726,8 @@ export default component$(() => {
           <nav>
             <a href="#how-it-works">{tx.value("navHowItWorks")}</a>
             <a href="#coin-guides">{tx.value("navGuides")}</a>
+            <a href="/bitcoin-mining-profitability-index/">{tx.value("navIndex")}</a>
+            <a href="/embed-calculator/">{tx.value("navEmbed")}</a>
             <a href="#onboarding-form">{tx.value("navStart")}</a>
           </nav>
           <button
@@ -2614,6 +2616,20 @@ export default component$(() => {
               <a href={miner.pathname}>{miner.h1}</a>
             </li>
           ))}
+        </ul>
+        <h3>Cite the data or embed the calculator</h3>
+        <p>
+          The Bitcoin mining profitability index publishes current ASIC revenue, power cost, and
+          break-even electricity from live network data. You can also embed the calculator on your
+          own site.
+        </p>
+        <ul class="guide-link-list">
+          <li>
+            <a href="/bitcoin-mining-profitability-index/">Bitcoin mining profitability index</a>
+          </li>
+          <li>
+            <a href="/embed-calculator/">Embed this calculator</a>
+          </li>
         </ul>
       </section>
 
