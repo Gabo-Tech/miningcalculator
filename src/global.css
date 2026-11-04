@@ -243,8 +243,8 @@ body.theme-light {
 }
 
 .hero-copy h1 {
-  font-size: clamp(2.8rem, 7vw, 5.4rem);
-  line-height: 0.98;
+  font-size: clamp(2.15rem, 4.4vw, 3.7rem);
+  line-height: 1.05;
   letter-spacing: -0.03em;
   margin: 8px 0 6px;
 }
@@ -1247,8 +1247,13 @@ select:focus-visible,
 }
 
 .site-footer {
-  width: min(1920px, calc(100vw - clamp(14px, 2vw, 44px)));
-  margin: 0 auto clamp(22px, 2vw, 44px);
+  display: grid;
+  gap: 14px;
+  padding: 4px 8px 12px;
+}
+
+.site-footer .credit-note {
+  margin: 0;
 }
 
 .featured-on {
@@ -1299,6 +1304,91 @@ select:focus-visible,
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+.sister-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sister-links a,
+.guide-link-list a,
+.spec-table a,
+.guide-top a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.guide-link-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px 18px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.guide-page {
+  width: min(980px, calc(100vw - clamp(14px, 2vw, 44px)));
+}
+
+.guide-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.guide-top nav {
+  display: flex;
+  gap: 16px;
+}
+
+.eyebrow {
+  color: var(--accent);
+  font-weight: 650;
+  margin: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.spec-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.spec-table th,
+.spec-table td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.spec-table th {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.table-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .health-item small {
@@ -1463,17 +1553,9 @@ body.theme-light .badge-health.down {
 }
 
 @media (max-width: 900px) {
-  .page,
-  .site-footer {
-    width: min(1360px, calc(100vw - 24px));
-  }
-
   .page {
+    width: min(1360px, calc(100vw - 24px));
     margin: 14px auto 34px;
-  }
-
-  .site-footer {
-    margin: 0 auto 34px;
   }
 
   .hero-nav {
@@ -1554,18 +1636,10 @@ body.theme-light .badge-health.down {
 }
 
 @media (max-width: 480px) {
-  .page,
-  .site-footer {
-    width: calc(100vw - 14px);
-  }
-
   .page {
+    width: calc(100vw - 14px);
     margin: 8px auto 24px;
     gap: 14px;
-  }
-
-  .site-footer {
-    margin: 0 auto 24px;
   }
 
   .featured-on {
@@ -1641,18 +1715,10 @@ body.theme-light .badge-health.down {
 }
 
 @media (max-width: 360px) {
-  .page,
-  .site-footer {
-    width: calc(100vw - 10px);
-  }
-
   .page {
+    width: calc(100vw - 10px);
     margin: 6px auto 18px;
     gap: 10px;
-  }
-
-  .site-footer {
-    margin: 0 auto 18px;
   }
 
   .card,
@@ -1674,17 +1740,13 @@ body.theme-light .badge-health.down {
 }
 
 @media (min-width: 1920px) {
-  .page,
-  .site-footer {
-    width: min(2200px, calc(100vw - 76px));
-  }
-
   .page {
+    width: min(2200px, calc(100vw - 76px));
     gap: clamp(24px, 1.8vw, 40px);
   }
 
   .hero-copy h1 {
-    font-size: clamp(3.4rem, 4vw, 5.8rem);
+    font-size: clamp(2.8rem, 3.2vw, 4.2rem);
   }
 
   .chart-grid {
@@ -1693,8 +1755,7 @@ body.theme-light .badge-health.down {
 }
 
 @media (min-width: 3000px) {
-  .page,
-  .site-footer {
+  .page {
     width: min(2700px, calc(100vw - 120px));
   }
 
@@ -1706,12 +1767,8 @@ body.theme-light .badge-health.down {
 }
 
 @media (min-width: 3840px) {
-  .page,
-  .site-footer {
-    width: min(3400px, calc(100vw - 180px));
-  }
-
   .page {
+    width: min(3400px, calc(100vw - 180px));
     gap: clamp(28px, 2vw, 46px);
   }
 

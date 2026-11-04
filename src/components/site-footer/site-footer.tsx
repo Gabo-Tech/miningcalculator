@@ -1,10 +1,13 @@
 import { component$ } from "@builder.io/qwik";
+import { AUTHOR_NAME, AUTHOR_URL, SISTER_TOOLS } from "../../lib/seo/site";
 
 /**
  * Launch badges. Hrefs match the provider embed snippets exactly.
  * Uneed uses the dark badge so it sits on the dark footer.
  */
 export const SiteFooter = component$(() => {
+  const year = new Date().getFullYear();
+
   return (
     <footer class="site-footer">
       <div class="featured-on">
@@ -70,6 +73,17 @@ export const SiteFooter = component$(() => {
           </li>
         </ul>
       </div>
+      <p class="credit-note">
+        © {year} Mining Profit Lab · Built by{" "}
+        <a href={AUTHOR_URL}>{AUTHOR_NAME}</a>
+      </p>
+      <ul class="sister-links">
+        {SISTER_TOOLS.map((tool) => (
+          <li key={tool.href}>
+            <a href={tool.href}>{tool.name}</a>
+          </li>
+        ))}
+      </ul>
     </footer>
   );
 });
