@@ -1256,6 +1256,11 @@ select:focus-visible,
   margin: 0;
 }
 
+.footer-credits {
+  display: grid;
+  gap: 4px;
+}
+
 .featured-on {
   display: flex;
   flex-direction: column;
